@@ -40,7 +40,70 @@ async function runTool(
 }
 
 const handler = createMcpHandler((server) => {
-  // TODO
+  server.registerTool(
+    "list_todos",
+    {
+      title: "Pobierz wszystkie todo",
+      description: "Zwraca tablice elementow todo.",
+      inputSchema: z.object({}),
+    },
+    async () => runTool(async () => result(await listTodos())),
+  );
+
+  server.registerTool(
+    "get_todo",
+    {
+      title: "Pobierz pojedyncze todo",
+      description: "Zwraca pojedynczy element todo na podstawie ID.",
+      inputSchema: z.object({ id: todoIdSchema }),
+    },
+    async ({ id }) =>
+      runTool(async () => {
+        const todo = await getTodo(id);
+        if (!todo) return failure("Todo nie zostało znalezione.");
+        return result(todo);
+      }),
+  );
+
+  server.registerTool(
+    "create_todo",
+    {
+      title: "Utwórz nowe todo",
+      description: "Tworzy nowy element todo z podanym tytułem.",
+      inputSchema: createTodoSchema,
+    },
+    async (input) => runTool(async () => result(await createTodo(input))),
+  );
+
+  server.registerTool(
+    "update_todo",
+    {
+      title: "Zaktualizuj todo",
+      description: "Aktualizuje istniejący element todo.",
+      inputSchema: z.object({ id: todoIdSchema, input: updateTodoSchema }),
+    },
+    async ({ id, input }) =>
+      runTool(async () => {
+        const todo = await updateTodo(id, input);
+        if (!todo) return failure("Todo nie zostało znalezione.");
+        return result(todo);
+      }),
+  );
+
+  server.registerTool(
+    "delete_todo",
+    {
+      title: "Usuń todo",
+      description: "Usuwa istniejący element todo na podstawie ID.",
+      inputSchema: z.object({ id: todoIdSchema }),
+    },
+    async ({ id }) =>
+      runTool(async () => {
+        const deleted = await deleteTodo(id);
+        if (!deleted) return failure("Todo nie zostało znalezione.");
+        return result({ success: true, message: "Todo zostało usunięte." });
+      }),
+  );
 });
 
 export { handler as GET, handler as POST };
